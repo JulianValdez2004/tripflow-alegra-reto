@@ -4,11 +4,17 @@ import { useState, useRef, useEffect } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { createTrip } from "@/actions/trip.actions";
 
+import { DateRange } from "react-day-picker";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { format } from "date-fns";
+
 export function NewTripForm() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -59,13 +65,19 @@ export function NewTripForm() {
     setIsSubmitting(true);
     setErrorMsg("");
     
+    if (!dateRange?.from || !dateRange?.to) {
+      setErrorMsg("Por favor selecciona las fechas de inicio y fin del viaje.");
+      setIsSubmitting(false);
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
-    // Asegurarnos de mandar el destino que el usuario seleccionó/escribió
     formData.set("destination", query);
+    formData.set("startDate", format(dateRange.from, 'yyyy-MM-dd'));
+    formData.set("endDate", format(dateRange.to, 'yyyy-MM-dd'));
     
     try {
       await createTrip(formData);
-      // El Server Action se encargará de hacer el redirect en caso de éxito
     } catch (err: any) {
       setErrorMsg(err.message || "Ocurrió un error al guardar.");
       setIsSubmitting(false);
@@ -119,26 +131,10 @@ export function NewTripForm() {
           )}
         </div>
 
-        {/* Fechas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha de Inicio</label>
-            <input 
-              type="date" 
-              name="startDate"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all text-gray-700"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha de Fin</label>
-            <input 
-              type="date" 
-              name="endDate"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all text-gray-700"
-              required
-            />
-          </div>
+        {/* Fechas - Range Picker */}
+        <div className="w-full">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Fechas del Viaje</label>
+          <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
         </div>
 
         {/* Presupuesto y Moneda */}

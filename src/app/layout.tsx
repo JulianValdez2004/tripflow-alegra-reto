@@ -3,6 +3,10 @@ import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { MobileHeader } from "@/components/layout/MobileHeader";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "Tripflow | Control de Presupuesto",
@@ -15,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" className={cn("font-sans", geist.variable)}>
       <body className="antialiased flex flex-col md:flex-row h-[100dvh] overflow-hidden bg-background text-foreground">
         {/* Desktop Sidebar (oculto en mobile) */}
         <Sidebar />
