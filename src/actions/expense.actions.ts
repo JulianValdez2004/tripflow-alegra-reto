@@ -9,10 +9,34 @@ export async function createExpense(formData: FormData) {
   const title = formData.get('title') as string;
   const amount = Number(formData.get('amount'));
   const category = formData.get('category') as string;
+  const receiptFile = formData.get('receipt') as File | null;
 
   // Validación básica
   if (!tripId || !title || amount <= 0 || !category) {
     throw new Error('Faltan datos obligatorios para el gasto.');
+  }
+
+  let receiptUrl = null;
+
+  // Procesar y subir el archivo si existe
+  if (receiptFile && receiptFile.size > 0) {
+    const fileExt = receiptFile.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    
+    // Subir al bucket 'receipts'
+    const { error: uploadError } = await supabase.storage
+      .from('receipts')
+      .upload(`public/${fileName}`, receiptFile);
+
+    if (uploadError) {
+      console.error('Error subiendo recibo:', uploadError);
+      // Podríamos fallar o continuar sin recibo, por ahora fallamos para asegurar la integridad
+      throw new Error('Error al subir la imagen del recibo.');
+    } else {
+      // Obtener la URL pública
+      const { data } = supabase.storage.from('receipts').getPublicUrl(`public/${fileName}`);
+      receiptUrl = data.publicUrl;
+    }
   }
 
   const { error } = await supabase
@@ -21,7 +45,8 @@ export async function createExpense(formData: FormData) {
       trip_id: tripId,
       title,
       amount,
-      category
+      category,
+      receipt_url: receiptUrl
     }]);
 
   if (error) {
