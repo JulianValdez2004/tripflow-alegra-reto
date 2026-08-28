@@ -8,9 +8,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-brand: #D81B60; /* Tripflow Primary Magenta */
-  --color-brand-hover: #C2185B;
-  --color-brand-light: #FCE4EC;
+  --color-brand: #FF3482; /* Tripflow Primary Magenta */
+  --color-brand-hover: #E02B71;
+  --color-brand-light: #FFEAEE;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
