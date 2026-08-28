@@ -158,10 +158,15 @@ export function NewTripForm() {
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all bg-white text-gray-700"
               defaultValue="USD"
             >
-              <option value="USD">USD - Dólar Estadounidense</option>
-              <option value="COP">COP - Peso Colombiano</option>
-              <option value="EUR">EUR - Euro</option>
-              <option value="MXN">MXN - Peso Mexicano</option>
+              {Intl.supportedValuesOf('currency').map(code => {
+                const name = new Intl.DisplayNames(['es'], { type: 'currency' }).of(code);
+                const capitalizedName = name ? name.charAt(0).toUpperCase() + name.slice(1) : code;
+                return (
+                  <option key={code} value={code}>
+                    {code} - {capitalizedName}
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>
