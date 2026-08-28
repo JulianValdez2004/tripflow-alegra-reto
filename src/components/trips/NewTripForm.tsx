@@ -157,6 +157,7 @@ export function NewTripForm() {
               name="currency"
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all bg-white text-gray-700"
               defaultValue="USD"
+              suppressHydrationWarning
             >
               {Intl.supportedValuesOf('currency').map(code => {
                 const name = new Intl.DisplayNames(['es'], { type: 'currency' }).of(code);
