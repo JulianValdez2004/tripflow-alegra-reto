@@ -1,9 +1,11 @@
-// import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
-// // TODO: Replace with environment variables once Supabase is set up
-// const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-// const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Faltan las variables de entorno de Supabase. Revisa tu archivo .env.local');
+}
 
-export {};
+// Exportamos una única instancia del cliente para usarla en toda la app
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
