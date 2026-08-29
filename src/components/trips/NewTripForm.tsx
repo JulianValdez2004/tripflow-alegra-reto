@@ -21,15 +21,18 @@ export function NewTripForm() {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Cerrar el dropdown al hacer clic fuera de él
+  const [currencies, setCurrencies] = useState<{ code: string; name: string }[]>([]);
+  // Cerrar el calendario al hacer clic fuera de él
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
+    if (typeof window !== "undefined" && typeof Intl !== "undefined" && Intl.supportedValuesOf) {
+          const formatter = new Intl.DisplayNames(['es'], { type: 'currency' });
+          const currencyList = Intl.supportedValuesOf('currency').map(code => {
+            const rawName = formatter.of(code);
+            const capitalizedName = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1) : code;
+            return { code, name: capitalizedName };
+          });
+          setCurrencies(currencyList);
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Buscar destinos usando la API gratuita de Nominatim (OpenStreetMap)
