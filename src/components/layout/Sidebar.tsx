@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Map, Receipt } from "lucide-react";
 
-// Rutas base según mockups
+// Rutas base según mockups dados para la prueba
 const navItems = [
   { name: "Inicio", href: "/dashboard", icon: LayoutDashboard },
   { name: "Mis Viajes", href: "/trips", icon: Map },
