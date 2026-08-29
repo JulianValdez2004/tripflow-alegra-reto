@@ -162,15 +162,15 @@ export function NewTripForm() {
               defaultValue="USD"
               suppressHydrationWarning
             >
-              {Intl.supportedValuesOf('currency').map(code => {
-                const name = new Intl.DisplayNames(['es'], { type: 'currency' }).of(code);
-                const capitalizedName = name ? name.charAt(0).toUpperCase() + name.slice(1) : code;
-                return (
+              {currencies.length > 0 ? (
+                currencies.map(({ code, name }) => (
                   <option key={code} value={code}>
-                    {code} - {capitalizedName}
+                    {code} - {name}
                   </option>
-                );
-              })}
+                ))
+              ) : (
+                <option value="USD">USD - Dólar estadounidense</option>
+              )}
             </select>
           </div>
         </div>
