@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase/client";
 import { formatCurrency, formatDate, formatDestination } from "@/lib/utils";
 import Link from "next/link";
 import { Plane, Plus, Wallet, TrendingUp, AlertCircle, ArrowRight } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashboardChart } from "@/components/dashboard/DashboardChart";
 import { CategoryIcon } from "@/components/dashboard/CategoryIcon";
 import { FloatingActionButton } from "@/components/dashboard/FloatingActionButton";
@@ -66,15 +67,35 @@ export default async function DashboardPage() {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   const remainingDays = diffDays > 0 ? diffDays : 0;
 
-  const expensesChartData = activeTrip.expenses
-    .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-    .map((exp: any) => ({
-      name: new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(new Date(exp.created_at)),
-      amount: Number(exp.amount)
+  // Agrupar gastos por día para la gráfica
+  const groupedExpenses = activeTrip.expenses.reduce((acc: any, exp: any) => {
+    const date = new Date(exp.created_at);
+    const dateKey = date.toISOString().split('T')[0];
+    
+    if (!acc[dateKey]) {
+      acc[dateKey] = {
+        date,
+        dayLabel: new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date),
+        fullDate: new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).format(date),
+        amount: 0
+      };
+    }
+    acc[dateKey].amount += Number(exp.amount);
+    return acc;
+  }, {});
+
+  const expensesChartData = Object.values(groupedExpenses)
+    .sort((a: any, b: any) => a.date.getTime() - b.date.getTime())
+    .map((item: any) => ({
+      dayLabel: item.dayLabel,
+      fullDate: item.fullDate,
+      amount: item.amount
     }));
 
   if (expensesChartData.length === 0) {
-    expensesChartData.push({ name: 'Hoy', amount: 0 }); 
+    const todayLabel = new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(today);
+    const todayFull = new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).format(today);
+    expensesChartData.push({ dayLabel: todayLabel, fullDate: todayFull, amount: 0 }); 
   }
 
   const recentExpenses = [...activeTrip.expenses]
@@ -128,12 +149,17 @@ export default async function DashboardPage() {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-gray-900 hidden md:block">Gastos Actuales</h2>
             <h2 className="text-xl font-bold text-gray-900 block md:hidden">Evolución de Gastos</h2>
-            <select className="border border-gray-200 text-sm rounded-lg px-3 py-1.5 outline-none focus:border-brand bg-white text-gray-600">
-              <option>Este Mes</option>
-              <option>Última Semana</option>
-            </select>
+            <Select defaultValue="mes">
+              <SelectTrigger className="w-[140px] h-8 text-xs font-semibold bg-white border-gray-200 rounded-lg focus:ring-brand/30 focus:border-brand transition-colors text-gray-700 shadow-sm">
+                <SelectValue placeholder="Periodo" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl shadow-xl border-gray-100">
+                <SelectItem value="mes" className="cursor-pointer text-sm font-medium focus:bg-brand/10 focus:text-brand transition-colors">Este Mes</SelectItem>
+                <SelectItem value="semana" className="cursor-pointer text-sm font-medium focus:bg-brand/10 focus:text-brand transition-colors">Última Semana</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <DashboardChart data={expensesChartData} />
+          <DashboardChart data={expensesChartData} currency={activeTrip.currency} />
         </div>
 
         {/* Columna Derecha: Tarjetas */}

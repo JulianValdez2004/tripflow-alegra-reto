@@ -39,15 +39,24 @@ export async function createExpense(formData: FormData) {
     }
   }
 
+  const dateStr = formData.get('date') as string;
+
+  const insertPayload: any = {
+    trip_id: tripId,
+    title,
+    amount,
+    category,
+    receipt_url: receiptUrl
+  };
+
+  if (dateStr) {
+    // Agregamos una hora media (12:00 PM) para evitar desfases de zona horaria al guardar en UTC
+    insertPayload.created_at = `${dateStr}T12:00:00Z`;
+  }
+
   const { error } = await supabase
     .from('expenses')
-    .insert([{
-      trip_id: tripId,
-      title,
-      amount,
-      category,
-      receipt_url: receiptUrl
-    }]);
+    .insert([insertPayload]);
 
   if (error) {
     console.error('Error al crear el gasto:', error);

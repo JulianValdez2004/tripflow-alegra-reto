@@ -240,18 +240,30 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
           </div>
         </div>
 
-        {/* Monto */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Monto</label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-lg">$</span>
+        {/* Monto y Fecha */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Monto</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-lg">$</span>
+              <input 
+                type="number" 
+                name="amount"
+                step="0.01"
+                min="0.01"
+                placeholder="0.00"
+                className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all text-gray-700 text-lg font-medium h-14"
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha del Gasto</label>
             <input 
-              type="number" 
-              name="amount"
-              step="0.01"
-              min="0.01"
-              placeholder="0.00"
-              className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all text-gray-700 text-lg font-medium h-14"
+              type="date" 
+              name="date"
+              defaultValue={new Date().toISOString().split('T')[0]}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all text-gray-700 text-lg font-medium h-14"
               required
             />
           </div>
