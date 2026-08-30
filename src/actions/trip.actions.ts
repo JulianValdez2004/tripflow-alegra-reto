@@ -67,3 +67,81 @@ export async function createTrip(formData: FormData) {
   
   return { success: true };
 }
+
+export async function deleteTrip(tripId: string) {
+  const { error } = await supabase
+    .from('trips')
+    .delete()
+    .eq('id', tripId);
+
+  if (error) {
+    console.error('Error al eliminar el viaje:', error);
+    throw new Error('No se pudo eliminar el viaje.');
+  }
+
+  revalidatePath('/dashboard');
+  revalidatePath('/trips');
+  revalidatePath('/expenses/new');
+  return { success: true };
+}
+
+export async function updateTrip(tripId: string, formData: FormData) {
+  const budgetLimit = Number(formData.get('budgetLimit'));
+  const destination = formData.get('destination') as string;
+  const startDate = formData.get('startDate') as string;
+  const endDate = formData.get('endDate') as string;
+  const currency = formData.get('currency') as string;
+  
+  if (budgetLimit <= 0) {
+    throw new Error('El presupuesto debe ser mayor a cero.');
+  }
+
+  const updates: any = { budget_limit: budgetLimit };
+
+  // Si envían los demás datos (es un viaje próximo y pueden editarlos)
+  if (destination && startDate && endDate && currency) {
+    // Verificar cruce de fechas ignorando el viaje actual
+    const { data: existingTrips, error: fetchError } = await supabase
+      .from('trips')
+      .select('id, start_date, end_date, destination')
+      .neq('id', tripId); // Excluir este viaje
+
+    if (fetchError) throw new Error('Error al validar fechas.');
+
+    const newStart = new Date(startDate);
+    const newEnd = new Date(endDate);
+
+    const overlappingTrip = existingTrips?.find(trip => {
+      const tripStart = new Date(trip.start_date);
+      const tripEnd = new Date(trip.end_date);
+      return newStart <= tripEnd && newEnd >= tripStart;
+    });
+
+    if (overlappingTrip) {
+      const formattedDest = formatDestination(overlappingTrip.destination);
+      const startStr = formatDate(overlappingTrip.start_date);
+      const endStr = formatDate(overlappingTrip.end_date);
+      throw new Error(`Las fechas se cruzan con tu viaje a ${formattedDest} (${startStr} al ${endStr}).`);
+    }
+
+    updates.destination = destination;
+    updates.start_date = startDate;
+    updates.end_date = endDate;
+    updates.currency = currency;
+  }
+
+  const { error } = await supabase
+    .from('trips')
+    .update(updates)
+    .eq('id', tripId);
+
+  if (error) {
+    console.error('Error al actualizar el viaje:', error);
+    throw new Error('Error al actualizar el viaje en la base de datos');
+  }
+
+  revalidatePath('/dashboard');
+  revalidatePath('/trips');
+  
+  return { success: true };
+}
