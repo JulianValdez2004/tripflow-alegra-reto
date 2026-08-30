@@ -15,6 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface Trip {
   id: string;
@@ -45,6 +49,9 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
 
   // Estado para la categoría
   const [selectedCategory, setSelectedCategory] = useState<string>("Alimentación");
+  
+  // Estado para la fecha del gasto
+  const [expenseDate, setExpenseDate] = useState<Date | undefined>(new Date());
   
   // Para el drag and drop / input file
   const [dragActive, setDragActive] = useState(false);
@@ -105,9 +112,12 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
     const formData = new FormData(e.currentTarget);
     
     // Como usamos shadcn Select, los valores no van automáticamente en el form si no los inyectamos
-    // shadcn Select internamente sí puede inyectar un input hidden, pero para asegurarnos:
+    // Inyectamos valores manuales
     formData.set("tripId", selectedTripId);
     formData.set("category", selectedCategory);
+    if (expenseDate) {
+      formData.set("date", format(expenseDate, 'yyyy-MM-dd'));
+    }
     
     if (selectedFile) {
       formData.set("receipt", selectedFile);
@@ -176,7 +186,7 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
         {/* Viaje Asociado con Shadcn Select */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Viaje Asociado</label>
-          <Select value={selectedTripId} onValueChange={setSelectedTripId} required>
+          <Select value={selectedTripId} onValueChange={(val) => val && setSelectedTripId(val)} required>
             <SelectTrigger className="w-full px-4 py-6 border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all text-base">
               <span className={`flex-1 text-left line-clamp-1 ${!selectedTrip ? "text-muted-foreground" : ""}`}>
                 {selectedTrip ? selectedTrip.destination : "Selecciona el viaje..."}
@@ -210,7 +220,7 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Categoría</label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory} required>
+            <Select value={selectedCategory} onValueChange={(val) => val && setSelectedCategory(val)} required>
               <SelectTrigger className="w-full px-4 py-6 border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all text-base">
                 <div className="flex-1 text-left flex items-center">
                   {(() => {
@@ -259,13 +269,26 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha del Gasto</label>
-            <input 
-              type="date" 
-              name="date"
-              defaultValue={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all text-gray-700 text-lg font-medium h-14"
-              required
-            />
+            <Popover>
+              <PopoverTrigger className="w-full text-left">
+                <div
+                  className={`w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all text-base text-left flex items-center h-14 bg-white ${
+                    !expenseDate ? "text-muted-foreground" : "text-gray-900"
+                  }`}
+                >
+                  <CalendarIcon className="mr-3 h-5 w-5 text-gray-400" />
+                  {expenseDate ? format(expenseDate, "PPP", { locale: es }) : <span>Seleccionar fecha</span>}
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={expenseDate}
+                  onSelect={setExpenseDate}
+                  locale={es}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 

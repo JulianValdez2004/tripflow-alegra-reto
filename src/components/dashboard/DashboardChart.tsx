@@ -44,7 +44,7 @@ export function DashboardChart({ data, currency = 'USD' }: { data: ChartData[], 
                   dataKey="dayLabel" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 12, fill: '#9CA3AF', textTransform: 'capitalize' }} 
+                  tick={{ fontSize: 12, fill: '#9CA3AF' }} 
                   dy={10}
                 />
                 <YAxis 
@@ -81,7 +81,7 @@ export function DashboardChart({ data, currency = 'USD' }: { data: ChartData[], 
                   dataKey="dayLabel" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 10, fill: '#9CA3AF', textTransform: 'capitalize' }} 
+                  tick={{ fontSize: 10, fill: '#9CA3AF' }} 
                   dy={10}
                 />
                 <YAxis 

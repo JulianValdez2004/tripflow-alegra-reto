@@ -67,6 +67,9 @@ export default async function DashboardPage() {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   const remainingDays = diffDays > 0 ? diffDays : 0;
 
+  // Helper to capitalize first letter
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
   // Agrupar gastos por día para la gráfica
   const groupedExpenses = activeTrip.expenses.reduce((acc: any, exp: any) => {
     const date = new Date(exp.created_at);
@@ -75,8 +78,8 @@ export default async function DashboardPage() {
     if (!acc[dateKey]) {
       acc[dateKey] = {
         date,
-        dayLabel: new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date),
-        fullDate: new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).format(date),
+        dayLabel: capitalize(new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date)),
+        fullDate: capitalize(new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).format(date)),
         amount: 0
       };
     }
@@ -93,8 +96,8 @@ export default async function DashboardPage() {
     }));
 
   if (expensesChartData.length === 0) {
-    const todayLabel = new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(today);
-    const todayFull = new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).format(today);
+    const todayLabel = capitalize(new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(today));
+    const todayFull = capitalize(new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).format(today));
     expensesChartData.push({ dayLabel: todayLabel, fullDate: todayFull, amount: 0 }); 
   }
 
