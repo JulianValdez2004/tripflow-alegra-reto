@@ -43,10 +43,10 @@ export function FloatingActionButton() {
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className={`w-14 h-14 rounded-full bg-brand hover:bg-brand-hover shadow-[0_8px_30px_rgb(255,52,130,0.5)] flex items-center justify-center transition-all duration-300 relative z-10 ${
-          isOpen ? "rotate-45 scale-105" : "hover:scale-110"
+          isOpen ? "scale-105" : "hover:scale-110"
         }`}
       >
-        <Plus className="w-7 h-7 text-white transition-transform" />
+        <Plus className={`w-7 h-7 text-white transition-transform duration-300 ${isOpen ? "rotate-45" : "rotate-0"}`} />
       </button>
     </div>
   );

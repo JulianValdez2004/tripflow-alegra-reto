@@ -198,7 +198,7 @@ export function NewTripForm() {
                   })()}
                 </span>
               </SelectTrigger>
-              <SelectContent className="rounded-xl max-h-72 p-1">
+              <SelectContent className="rounded-xl max-h-72 p-1" alignItemWithTrigger={false}>
                 <div className="p-2 sticky top-0 bg-white z-10 border-b border-gray-100 mb-1">
                   <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
