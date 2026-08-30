@@ -3,6 +3,7 @@ import { formatCurrency, formatDate, formatDestination } from "@/lib/utils";
 import Link from "next/link";
 import { Plus, Calendar, MapPin, Wallet } from "lucide-react";
 import Image from "next/image";
+import { TripActions } from "@/components/trips/TripActions";
 
 export const dynamic = "force-dynamic";
 
@@ -119,10 +120,11 @@ export default async function TripsPage(props: { searchParams: Promise<{ filter?
               <div key={trip.id} className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col group">
                 
                 <div className="p-6 relative">
-                  <div className="absolute top-6 right-6">
-                    <span className={`px-2.5 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${statusColor}`}>
+                  <div className="absolute top-6 right-6 flex items-center gap-2">
+                    <span className={`px-2.5 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider shadow-sm ${statusColor}`}>
                       {statusText}
                     </span>
+                    <TripActions trip={trip} status={statusText} />
                   </div>
                   
                   <div className="flex items-start gap-4 mb-4 pr-24">
