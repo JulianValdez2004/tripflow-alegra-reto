@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { 
-  Loader2, UploadCloud, Receipt, X, 
+  Loader2, UploadCloud, Receipt, X, AlertCircle,
   Utensils, Bus, Bed, Ticket, Plane, MoreHorizontal, Calendar as CalendarIcon, Wallet
 } from "lucide-react";
 import { createExpense } from "@/actions/expense.actions";
@@ -45,6 +45,11 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Estados para validación de sobregiro
+  const [showOverdraftModal, setShowOverdraftModal] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
+  const [overdraftAmount, setOverdraftAmount] = useState(0);
+
   // Estado para el viaje seleccionado
   const [selectedTripId, setSelectedTripId] = useState<string>("");
   const selectedTrip = trips.find(t => t.id === selectedTripId);
@@ -111,7 +116,6 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
     
     const formData = new FormData(e.currentTarget);
     
-    // Como usamos shadcn Select, los valores no van automáticamente en el form si no los inyectamos
     // Inyectamos valores manuales
     formData.set("tripId", selectedTripId);
     formData.set("category", selectedCategory);
@@ -129,6 +133,27 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
       return;
     }
 
+    // --- VALIDACIÓN DE SOBREGIRO ---
+    const expenseAmount = Number(formData.get("amount"));
+    if (selectedTrip) {
+      const totalSpent = selectedTrip.expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+      const available = selectedTrip.budget_limit - totalSpent;
+      
+      if (expenseAmount > available) {
+        setOverdraftAmount(expenseAmount - available);
+        setPendingFormData(formData);
+        setShowOverdraftModal(true);
+        setIsSubmitting(false); // Pausar submit real
+        return; // Detenemos aquí, el usuario decidirá en el Modal
+      }
+    }
+
+    // Si todo está bien (no hay sobregiro), ejecutamos directo
+    await executeSubmit(formData);
+  };
+
+  const executeSubmit = async (formData: FormData) => {
+    setIsSubmitting(true);
     const loadingToast = toast.loading("Registrando gasto...");
 
     try {
@@ -363,6 +388,40 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
         </div>
 
       </form>
+
+      {/* OVERDRAFT MODAL */}
+      {showOverdraftModal && (
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 shadow-sm border border-red-100">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Presupuesto Superado</h3>
+            <p className="text-gray-600 mb-8 text-sm md:text-base leading-relaxed">
+              Este gasto supera el límite de presupuesto de tu viaje por <strong className="text-red-500 font-bold whitespace-nowrap">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: selectedTrip?.currency || 'USD', maximumFractionDigits: 0 }).format(overdraftAmount)}</strong>. ¿Deseas registrarlo de todas formas?
+            </p>
+            <div className="flex gap-3 w-full">
+              <button 
+                type="button"
+                onClick={() => setShowOverdraftModal(false)} 
+                className="flex-1 py-3.5 bg-gray-100 rounded-xl font-semibold text-gray-700 hover:bg-gray-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setShowOverdraftModal(false);
+                  if (pendingFormData) executeSubmit(pendingFormData);
+                }} 
+                className="flex-1 py-3.5 bg-brand text-white rounded-xl font-semibold hover:bg-brand-hover transition-colors shadow-md"
+              >
+                Sí, registrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
