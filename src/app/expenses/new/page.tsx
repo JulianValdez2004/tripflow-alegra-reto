@@ -13,6 +13,9 @@ export default async function NewExpensePage() {
     .select('id, destination, budget_limit, currency, start_date, end_date, expenses(amount)')
     .order('created_at', { ascending: false });
 
+  const todayStr = new Date().toISOString().split('T')[0];
+  const activeTrips = trips?.filter(trip => trip.end_date >= todayStr) || [];
+
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
       <Link href="/expenses" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 mb-6 transition-colors">
@@ -25,7 +28,7 @@ export default async function NewExpensePage() {
       {error ? (
         <div className="text-red-500 bg-red-50 p-4 rounded-xl">Error cargando viajes: {error.message}</div>
       ) : (
-        <NewExpenseForm trips={trips || []} />
+        <NewExpenseForm trips={activeTrips} />
       )}
     </div>
   );

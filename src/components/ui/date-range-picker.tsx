@@ -19,12 +19,14 @@ interface DatePickerWithRangeProps {
   className?: string;
   onDateChange: (date: DateRange | undefined) => void;
   date: DateRange | undefined;
+  disabled?: any;
 }
 
 export function DatePickerWithRange({
   className,
   date,
   onDateChange,
+  disabled,
 }: DatePickerWithRangeProps) {
   const [isMobile, setIsMobile] = React.useState(false);
 
@@ -67,6 +69,7 @@ export function DatePickerWithRange({
             onSelect={onDateChange}
             numberOfMonths={isMobile ? 1 : 2}
             locale={es}
+            disabled={disabled}
           />
         </PopoverContent>
       </Popover>

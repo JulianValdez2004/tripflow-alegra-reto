@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { 
-  Loader2, UploadCloud, Receipt, X, AlertCircle,
+  Loader2, UploadCloud, Receipt, X, AlertCircle, Search,
   Utensils, Bus, Bed, Ticket, Plane, MoreHorizontal, Calendar as CalendarIcon, Wallet
 } from "lucide-react";
 import { createExpense } from "@/actions/expense.actions";
@@ -52,6 +52,7 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
 
   // Estado para el viaje seleccionado
   const [selectedTripId, setSelectedTripId] = useState<string>("");
+  const [tripSearch, setTripSearch] = useState("");
   const selectedTrip = trips.find(t => t.id === selectedTripId);
 
   // Estado para la categoría
@@ -223,13 +224,30 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
                 {selectedTrip ? selectedTrip.destination : "Selecciona el viaje..."}
               </span>
             </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              {trips.length === 0 && <SelectItem value="none" disabled>No tienes viajes (crea uno primero)</SelectItem>}
-              {trips.map(t => (
-                <SelectItem key={t.id} value={t.id} className="py-3 cursor-pointer">
-                  {t.destination}
-                </SelectItem>
-              ))}
+            <SelectContent className="rounded-xl max-h-72 p-1">
+              <div className="p-2 sticky top-0 bg-white z-10 border-b border-gray-100 mb-1">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Buscar viaje..."
+                    value={tripSearch}
+                    onChange={(e) => setTripSearch(e.target.value)}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-brand/50 focus:border-brand transition-all"
+                  />
+                </div>
+              </div>
+              {trips.length === 0 && <div className="py-4 text-center text-sm text-gray-500">No tienes viajes (crea uno primero)</div>}
+              {trips.filter(t => t.destination.toLowerCase().includes(tripSearch.toLowerCase())).length > 0 ? (
+                trips.filter(t => t.destination.toLowerCase().includes(tripSearch.toLowerCase())).map(t => (
+                  <SelectItem key={t.id} value={t.id} className="py-2.5 cursor-pointer">
+                    {t.destination}
+                  </SelectItem>
+                ))
+              ) : (
+                trips.length > 0 && <div className="py-4 text-center text-sm text-gray-500">No se encontraron resultados</div>
+              )}
             </SelectContent>
           </Select>
           
@@ -316,6 +334,11 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
                   mode="single"
                   selected={expenseDate}
                   onSelect={setExpenseDate}
+                  disabled={
+                    selectedTrip 
+                      ? { after: new Date(new Date(selectedTrip.end_date).setMinutes(new Date(selectedTrip.end_date).getMinutes() + new Date(selectedTrip.end_date).getTimezoneOffset())) }
+                      : false
+                  }
                   locale={es}
                 />
               </PopoverContent>
