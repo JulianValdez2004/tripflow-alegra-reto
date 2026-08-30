@@ -23,3 +23,10 @@ export function formatDate(dateString: string) {
     year: 'numeric'
   }).format(date);
 }
+
+export function formatDestination(destination: string) {
+  if (!destination) return "";
+  const parts = destination.split(',').map(s => s.trim());
+  if (parts.length <= 2) return destination;
+  return `${parts[0]}, ${parts[parts.length - 1]}`;
+}

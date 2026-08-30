@@ -29,8 +29,13 @@ export function DashboardChart({ data }: { data: any[] }) {
             <YAxis 
               axisLine={false} 
               tickLine={false} 
+              width={65}
               tick={{ fontSize: 12, fill: '#9CA3AF' }} 
-              tickFormatter={(value) => `$${value}`}
+              tickFormatter={(value) => {
+                if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+                if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
+                return `$${value}`;
+              }}
             />
             <Tooltip 
               contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', backgroundColor: '#FF3482', color: 'white', fontWeight: 'bold' }}
@@ -67,8 +72,13 @@ export function DashboardChart({ data }: { data: any[] }) {
             <YAxis 
               axisLine={false} 
               tickLine={false} 
+              width={55}
               tick={{ fontSize: 10, fill: '#9CA3AF' }} 
-              tickFormatter={(value) => `$${value}`}
+              tickFormatter={(value) => {
+                if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+                if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
+                return `$${value}`;
+              }}
             />
             <Tooltip 
               contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', backgroundColor: '#FF3482', color: 'white', fontWeight: 'bold', fontSize: '14px' }}

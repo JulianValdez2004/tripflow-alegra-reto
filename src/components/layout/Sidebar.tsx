@@ -17,7 +17,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 h-full p-4">
+    <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 h-full p-4 relative z-50">
       {/* Logo Area */}
       <div className="flex items-center gap-2 px-4 mb-8 mt-2">
         <Image src="/icon.svg" alt="Tripflow Icon" width={36} height={36} className="object-contain" priority />

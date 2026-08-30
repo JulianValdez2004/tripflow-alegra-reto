@@ -29,7 +29,7 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
+  --color-ring: #FF348280;
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);

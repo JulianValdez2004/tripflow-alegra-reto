@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatDestination } from "@/lib/utils";
 import Link from "next/link";
 import { Plane, Plus, Wallet, TrendingUp, AlertCircle, ArrowRight } from "lucide-react";
 import { DashboardChart } from "@/components/dashboard/DashboardChart";
@@ -150,7 +150,7 @@ export default async function DashboardPage() {
                 </span>
               </div>
               
-              <p className="text-xl font-bold text-gray-900 line-clamp-1">{activeTrip.destination}</p>
+              <p className="text-xl font-bold text-gray-900 line-clamp-1">{formatDestination(activeTrip.destination)}</p>
               <p className="text-sm text-gray-500 mt-1">{formatDate(activeTrip.start_date)} - {formatDate(activeTrip.end_date)}</p>
             </div>
           </div>
