@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MoreHorizontal, Edit2, Trash2, AlertTriangle, Loader2, X } from "lucide-react";
+import { MoreHorizontal, Edit2, Trash2, AlertTriangle, Loader2, X, Search } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { deleteTrip, updateTrip } from "@/actions/trip.actions";
 import { toast } from "sonner";
@@ -43,6 +43,44 @@ export function TripActions({ trip, status }: { trip: any, status: string }) {
     }
   }, []);
 
+  // Autocomplete states
+  const [query, setQuery] = useState(trip.destination);
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    if (query.length < 3) {
+      setResults([]);
+      return;
+    }
+    
+    if (query === destination) {
+      return;
+    }
+    
+    const timeoutId = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&featuretype=city`);
+        const data = await res.json();
+        setResults(data);
+      } catch (err) {
+        console.error("Error fetching places", err);
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [query, destination]);
+
+  const handleSelectPlace = (placeName: string) => {
+    setQuery(placeName);
+    setDestination(placeName);
+    setShowDropdown(false);
+  };
+
   // Si está finalizado, no mostramos nada
   if (status === "Finalizado") return null;
 
@@ -67,8 +105,8 @@ export function TripActions({ trip, status }: { trip: any, status: string }) {
     formData.set("budgetLimit", budgetLimit.toString());
     
     if (!isOngoing) {
-      if (!destination || !dateRange?.from || !dateRange?.to) {
-        toast.error("Faltan datos", { description: "Completa todos los campos requeridos." });
+      if (!destination || query !== destination || !dateRange?.from || !dateRange?.to) {
+        toast.error("Datos inválidos", { description: "Selecciona un destino de la lista y las fechas requeridas." });
         setIsSubmitting(false);
         return;
       }
@@ -169,16 +207,45 @@ export function TripActions({ trip, status }: { trip: any, status: string }) {
             <form onSubmit={handleEditSubmit} className="p-6 overflow-y-auto flex flex-col gap-5">
               
               {/* Destino */}
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Destino</label>
-                <input 
-                  type="text" 
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  disabled={isOngoing}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all disabled:bg-gray-100 disabled:text-gray-500"
-                  required
-                />
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input 
+                    type="text" 
+                    value={query}
+                    onChange={(e) => {
+                      setQuery(e.target.value);
+                      setShowDropdown(true);
+                    }}
+                    onFocus={() => setShowDropdown(true)}
+                    disabled={isOngoing}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all disabled:bg-gray-100 disabled:text-gray-500"
+                    required
+                  />
+                </div>
+                
+                {/* Autocomplete Dropdown */}
+                {showDropdown && !isOngoing && (results.length > 0 || loading) && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-72 overflow-y-auto p-1">
+                    {loading ? (
+                      <div className="py-4 text-center text-sm text-gray-500 flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" /> Buscando lugares...
+                      </div>
+                    ) : (
+                      results.map((place, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleSelectPlace(place.display_name)}
+                          className="w-full text-left px-2 py-2.5 text-sm hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          {place.display_name}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Fechas */}

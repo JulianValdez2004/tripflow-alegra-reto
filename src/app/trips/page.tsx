@@ -121,18 +121,20 @@ export default async function TripsPage(props: { searchParams: Promise<{ filter?
                 
                 <div className="p-6 relative">
                   <div className="absolute top-6 right-6 flex items-center gap-2">
-                    <span className={`px-2.5 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider shadow-sm ${statusColor}`}>
-                      {statusText}
-                    </span>
                     <TripActions trip={trip} status={statusText} />
                   </div>
                   
-                  <div className="flex items-start gap-4 mb-4 pr-24">
-                    <div className="w-12 h-12 rounded-xl bg-brand/10 text-brand flex items-center justify-center flex-shrink-0 group-hover:bg-brand group-hover:text-white transition-colors">
+                  <div className="flex items-start gap-4 mb-4 pr-10">
+                    <div className="w-12 h-12 rounded-xl bg-brand/10 text-brand flex items-center justify-center flex-shrink-0 group-hover:bg-brand group-hover:text-white transition-colors mt-1">
                       <MapPin className="w-6 h-6" />
                     </div>
                     <div>
                       <h3 className="font-bold text-lg text-gray-900 line-clamp-2 leading-tight">{formatDestination(trip.destination)}</h3>
+                      <div className="mt-2.5">
+                        <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider shadow-sm ${statusColor}`}>
+                          {statusText}
+                        </span>
+                      </div>
                     </div>
                   </div>
 

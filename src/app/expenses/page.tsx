@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function ExpensesPage() {
   const { data: expenses, error } = await supabase
     .from('expenses')
-    .select('*, trips(destination, currency)')
+    .select('*, trips(id, destination, currency, start_date, end_date)')
     .order('created_at', { ascending: false });
 
   if (error) return <div className="p-8 text-red-500">Error cargando información.</div>;

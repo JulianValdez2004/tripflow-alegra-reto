@@ -2,8 +2,8 @@
 
 import { useState, useRef } from "react";
 import { 
-  Loader2, UploadCloud, Receipt, X, 
-  Utensils, Bus, Bed, Ticket, Plane, MoreHorizontal, Calendar as CalendarIcon, Wallet
+  Loader2, UploadCloud, Receipt, X, AlertCircle,
+  Utensils, Bus, Bed, Ticket, Plane, MoreHorizontal, Calendar as CalendarIcon, Wallet, Search
 } from "lucide-react";
 import { createExpense } from "@/actions/expense.actions";
 
@@ -19,6 +19,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface Trip {
   id: string;
@@ -40,11 +42,18 @@ const CATEGORIES = [
 ];
 
 export function NewExpenseForm({ trips }: { trips: Trip[] }) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   
+  // Estados para validación de sobregiro
+  const [showOverdraftModal, setShowOverdraftModal] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
+  const [overdraftAmount, setOverdraftAmount] = useState(0);
+  
   // Estado para el viaje seleccionado
   const [selectedTripId, setSelectedTripId] = useState<string>("");
+  const [tripSearch, setTripSearch] = useState("");
   const selectedTrip = trips.find(t => t.id === selectedTripId);
 
   // Estado para la categoría
@@ -111,7 +120,6 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
     
     const formData = new FormData(e.currentTarget);
     
-    // Como usamos shadcn Select, los valores no van automáticamente en el form si no los inyectamos
     // Inyectamos valores manuales
     formData.set("tripId", selectedTripId);
     formData.set("category", selectedCategory);
@@ -129,9 +137,33 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
       return;
     }
 
+    // --- VALIDACIÓN DE SOBREGIRO ---
+    const expenseAmount = Number(formData.get("amount"));
+    if (selectedTrip) {
+      const totalSpent = selectedTrip.expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+      const available = selectedTrip.budget_limit - totalSpent;
+      
+      if (expenseAmount > available) {
+        setOverdraftAmount(expenseAmount - available);
+        setPendingFormData(formData);
+        setShowOverdraftModal(true);
+        setIsSubmitting(false); // Pausar submit real
+        return; // Detenemos aquí, el usuario decidirá en el Modal
+      }
+    }
+
+    // Si todo está bien (no hay sobregiro), ejecutamos directo
+    await executeSubmit(formData);
+  };
+
+  const executeSubmit = async (formData: FormData) => {
+    setIsSubmitting(true);
     try {
       await createExpense(formData);
+      toast.success("¡Gasto registrado!", { description: "Se ha descontado de tu presupuesto." });
+      router.push('/dashboard');
     } catch (err: any) {
+      toast.error("Error", { description: err.message || "Ocurrió un error al guardar el gasto." });
       setErrorMsg(err.message || "Ocurrió un error al guardar el gasto.");
       setIsSubmitting(false);
     }
@@ -192,13 +224,30 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
                 {selectedTrip ? selectedTrip.destination : "Selecciona el viaje..."}
               </span>
             </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              {trips.length === 0 && <SelectItem value="none" disabled>No tienes viajes (crea uno primero)</SelectItem>}
-              {trips.map(t => (
-                <SelectItem key={t.id} value={t.id} className="py-3 cursor-pointer">
-                  {t.destination}
-                </SelectItem>
-              ))}
+            <SelectContent className="rounded-xl max-h-72 p-1" alignItemWithTrigger={false}>
+              <div className="p-2 sticky top-0 bg-white z-10 border-b border-gray-100 mb-1">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Buscar viaje..."
+                    value={tripSearch}
+                    onChange={(e) => setTripSearch(e.target.value)}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-brand/50 focus:border-brand transition-all"
+                  />
+                </div>
+              </div>
+              {trips.length === 0 && <div className="py-4 text-center text-sm text-gray-500">No tienes viajes (crea uno primero)</div>}
+              {trips.filter(t => t.destination.toLowerCase().includes(tripSearch.toLowerCase())).length > 0 ? (
+                trips.filter(t => t.destination.toLowerCase().includes(tripSearch.toLowerCase())).map(t => (
+                  <SelectItem key={t.id} value={t.id} className="py-2.5 cursor-pointer">
+                    {t.destination}
+                  </SelectItem>
+                ))
+              ) : (
+                trips.length > 0 && <div className="py-4 text-center text-sm text-gray-500">No se encontraron resultados</div>
+              )}
             </SelectContent>
           </Select>
           
@@ -285,6 +334,11 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
                   mode="single"
                   selected={expenseDate}
                   onSelect={setExpenseDate}
+                  disabled={
+                    selectedTrip 
+                      ? { after: new Date(new Date(selectedTrip.end_date).setMinutes(new Date(selectedTrip.end_date).getMinutes() + new Date(selectedTrip.end_date).getTimezoneOffset())) }
+                      : false
+                  }
                   locale={es}
                 />
               </PopoverContent>
@@ -359,6 +413,40 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
         </div>
 
       </form>
+
+      {/* OVERDRAFT MODAL */}
+      {showOverdraftModal && (
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 shadow-sm border border-red-100">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Presupuesto Superado</h3>
+            <p className="text-gray-600 mb-8 text-sm md:text-base leading-relaxed">
+              Este gasto supera el límite de presupuesto de tu viaje por <strong className="text-red-500 font-bold whitespace-nowrap">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: selectedTrip?.currency || 'USD', maximumFractionDigits: 0 }).format(overdraftAmount)}</strong>. ¿Deseas registrarlo de todas formas?
+            </p>
+            <div className="flex gap-3 w-full">
+              <button 
+                type="button"
+                onClick={() => setShowOverdraftModal(false)} 
+                className="flex-1 px-4 py-3 h-12 bg-gray-100 rounded-xl font-semibold text-gray-700 hover:bg-gray-200 transition-colors flex items-center justify-center"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setShowOverdraftModal(false);
+                  if (pendingFormData) executeSubmit(pendingFormData);
+                }} 
+                className="flex-1 px-4 py-3 h-12 bg-brand text-white rounded-xl font-semibold hover:bg-brand-hover transition-colors shadow-md flex items-center justify-center"
+              >
+                Sí, registrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

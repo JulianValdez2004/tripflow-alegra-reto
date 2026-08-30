@@ -5,6 +5,7 @@ import { formatCurrency, formatDate, formatDestination } from "@/lib/utils";
 import { MapPin, X, Receipt as ReceiptIcon } from "lucide-react";
 import Image from "next/image";
 import { CategoryIcon } from "@/components/dashboard/CategoryIcon";
+import { ExpenseActions } from "@/components/expenses/ExpenseActions";
 
 export function ExpensesList({ expenses }: { expenses: any[] }) {
   const [selectedExpense, setSelectedExpense] = useState<any | null>(null);
@@ -104,6 +105,14 @@ export function ExpensesList({ expenses }: { expenses: any[] }) {
             
             {/* Header del Ticket */}
             <div className="bg-white p-5 flex flex-col items-center justify-center border-b border-gray-100 relative">
+              <div className="absolute top-4 left-4">
+                <ExpenseActions 
+                  expense={selectedExpense} 
+                  isFinished={new Date(selectedExpense.trips?.end_date) < new Date(new Date().setHours(0,0,0,0))} 
+                  onClose={() => setSelectedExpense(null)} 
+                />
+              </div>
+              
               <button 
                 onClick={() => setSelectedExpense(null)}
                 className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"

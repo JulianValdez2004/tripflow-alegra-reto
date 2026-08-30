@@ -69,3 +69,72 @@ export async function createExpense(formData: FormData) {
   
   return { success: true };
 }
+
+export async function deleteExpense(expenseId: string) {
+  const { error } = await supabase
+    .from('expenses')
+    .delete()
+    .eq('id', expenseId);
+
+  if (error) {
+    console.error('Error al eliminar el gasto:', error);
+    throw new Error('No se pudo eliminar el gasto.');
+  }
+
+  revalidatePath('/dashboard');
+  revalidatePath('/expenses');
+  return { success: true };
+}
+
+export async function updateExpense(expenseId: string, formData: FormData) {
+  const title = formData.get('title') as string;
+  const amount = Number(formData.get('amount'));
+  const category = formData.get('category') as string;
+  const dateStr = formData.get('date') as string;
+  const receiptFile = formData.get('receipt') as File | null;
+
+  if (!title || amount <= 0 || !category) {
+    throw new Error('Faltan datos obligatorios o el monto es inválido.');
+  }
+
+  const updates: any = {
+    title,
+    amount,
+    category
+  };
+
+  if (dateStr) {
+    updates.created_at = `${dateStr}T12:00:00Z`;
+  }
+
+  if (receiptFile && receiptFile.size > 0) {
+    const fileExt = receiptFile.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('receipts')
+      .upload(`public/${fileName}`, receiptFile);
+
+    if (uploadError) {
+      throw new Error('Error al subir el nuevo recibo.');
+    } else {
+      const { data } = supabase.storage.from('receipts').getPublicUrl(`public/${fileName}`);
+      updates.receipt_url = data.publicUrl;
+    }
+  }
+
+  const { error } = await supabase
+    .from('expenses')
+    .update(updates)
+    .eq('id', expenseId);
+
+  if (error) {
+    console.error('Error al actualizar el gasto:', error);
+    throw new Error('Error al actualizar el gasto en la base de datos');
+  }
+
+  revalidatePath('/dashboard');
+  revalidatePath('/expenses');
+  
+  return { success: true };
+}
