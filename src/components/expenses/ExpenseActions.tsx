@@ -7,6 +7,7 @@ import { deleteExpense, updateExpense } from "@/actions/expense.actions";
 import { toast } from "sonner";
 import { createPortal } from "react-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CurrencyInput } from "@/components/ui/currency-input";
 
 const CATEGORIES = ["Alimentación", "Transporte", "Alojamiento", "Actividades", "Compras", "Otros"];
 
@@ -160,14 +161,10 @@ export function ExpenseActions({ expense, isFinished, onClose }: { expense: any,
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Monto</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
-                    <input 
-                      type="number" 
+                    <CurrencyInput 
                       value={amount}
-                      onChange={(e) => setAmount(Number(e.target.value))}
-                      step="0.01"
-                      min="0.01"
-                      className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
+                      onChange={(val) => setAmount(val)}
+                      currencySymbol={expense.trips?.currency || "$"}
                       required
                     />
                   </div>

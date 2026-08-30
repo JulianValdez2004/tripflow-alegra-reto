@@ -16,6 +16,8 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
+import { CurrencyInput } from "@/components/ui/currency-input";
+
 export function NewTripForm() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -27,6 +29,7 @@ export function NewTripForm() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const [currencySearch, setCurrencySearch] = useState("");
+  const [budgetLimitVal, setBudgetLimitVal] = useState<number | "">("");
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -190,20 +193,19 @@ export function NewTripForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Presupuesto</label>
-            <input 
-              type="number" 
+            <CurrencyInput 
               name="budgetLimit"
-              step="0.01"
-              min="1"
               placeholder="0.00"
-              onChange={() => setErrors(prev => ({ ...prev, budgetLimit: "" }))}
+              value={budgetLimitVal}
+              onChange={(val) => {
+                setBudgetLimitVal(val);
+                setErrors(prev => ({ ...prev, budgetLimit: "" }));
+              }}
+              error={!!errors.budgetLimit}
               onInvalid={(e) => {
                 e.preventDefault();
-                setErrors(prev => ({ ...prev, budgetLimit: "Define un presupuesto válido mayor a 0." }));
+                setErrors(prev => ({ ...prev, budgetLimit: "Define un presupuesto válido." }));
               }}
-              className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all ${
-                errors.budgetLimit ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-brand'
-              }`}
               required
             />
             {errors.budgetLimit && (

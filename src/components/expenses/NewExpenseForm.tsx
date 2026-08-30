@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { CurrencyInput } from "@/components/ui/currency-input";
 
 interface Trip {
   id: string;
@@ -30,6 +31,7 @@ interface Trip {
   start_date: string;
   end_date: string;
   expenses: { amount: number }[];
+  status: string;
 }
 
 const CATEGORIES = [
@@ -56,6 +58,9 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
   const [selectedTripId, setSelectedTripId] = useState<string>("");
   const [tripSearch, setTripSearch] = useState("");
   const selectedTrip = trips.find(t => t.id === selectedTripId);
+
+  // Estado para el monto
+  const [amountVal, setAmountVal] = useState<number | "">("");
 
   // Estado para la categoría
   const [selectedCategory, setSelectedCategory] = useState<string>("Alimentación");
@@ -317,21 +322,20 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Monto</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-lg">$</span>
-              <input 
-                type="number" 
+              <CurrencyInput 
                 name="amount"
-                step="0.01"
-                min="0.01"
                 placeholder="0.00"
-                onChange={() => setErrors(prev => ({ ...prev, amount: "" }))}
+                value={amountVal}
+                currencySymbol={selectedTrip?.currency || "$"}
+                onChange={(val) => {
+                  setAmountVal(val);
+                  setErrors(prev => ({ ...prev, amount: "" }));
+                }}
                 onInvalid={(e) => {
                   e.preventDefault();
-                  setErrors(prev => ({ ...prev, amount: "Ingresa un monto válido mayor a 0." }));
+                  setErrors(prev => ({ ...prev, amount: "Ingresa un monto válido." }));
                 }}
-                className={`w-full pl-9 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all text-gray-700 text-lg font-medium h-14 ${
-                  errors.amount ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-brand'
-                }`}
+                error={!!errors.amount}
                 required
               />
             </div>

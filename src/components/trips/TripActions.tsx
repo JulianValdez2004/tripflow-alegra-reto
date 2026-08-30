@@ -7,6 +7,7 @@ import { deleteTrip, updateTrip } from "@/actions/trip.actions";
 import { toast } from "sonner";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { createPortal } from "react-dom";
@@ -268,14 +269,10 @@ export function TripActions({ trip, status }: { trip: any, status: string }) {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Presupuesto Límite</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
-                  <input 
-                    type="number" 
+                  <CurrencyInput 
                     value={budgetLimit}
-                    onChange={(e) => setBudgetLimit(Number(e.target.value))}
-                    step="0.01"
-                    min="1"
-                    className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
+                    onChange={(val) => setBudgetLimit(val)}
+                    currencySymbol={trip.currency || "$"}
                     required
                   />
                 </div>
