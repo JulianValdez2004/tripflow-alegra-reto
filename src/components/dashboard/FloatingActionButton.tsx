@@ -8,12 +8,12 @@ export function FloatingActionButton() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-20 md:bottom-8 right-4 md:right-8 z-50 flex flex-col items-end">
+    <div className="fixed bottom-20 md:bottom-8 right-4 md:right-8 z-50 flex flex-col items-end pointer-events-none">
       
       {/* Opciones desplegables */}
       <div 
         className={`flex flex-col items-end gap-3 mb-4 transition-all duration-300 origin-bottom-right ${
-          isOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-50 translate-y-12 pointer-events-none"
+          isOpen ? "opacity-100 scale-100 translate-y-0 pointer-events-auto" : "opacity-0 scale-50 translate-y-12 pointer-events-none"
         }`}
       >
         <Link 
@@ -42,7 +42,7 @@ export function FloatingActionButton() {
       {/* Botón Principal */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-14 h-14 rounded-full bg-brand hover:bg-brand-hover shadow-[0_8px_30px_rgb(255,52,130,0.5)] flex items-center justify-center transition-all duration-300 relative z-10 ${
+        className={`w-14 h-14 rounded-full bg-brand hover:bg-brand-hover shadow-[0_8px_30px_rgb(255,52,130,0.5)] flex items-center justify-center transition-all duration-300 relative z-10 pointer-events-auto ${
           isOpen ? "scale-105" : "hover:scale-110"
         }`}
       >

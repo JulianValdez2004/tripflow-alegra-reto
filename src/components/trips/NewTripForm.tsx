@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, AlertCircle } from "lucide-react";
 import { createTrip } from "@/actions/trip.actions";
 
 import { DateRange } from "react-day-picker";
@@ -29,6 +29,7 @@ export function NewTripForm() {
   const [currencySearch, setCurrencySearch] = useState("");
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -133,12 +134,24 @@ export function NewTripForm() {
               onChange={(e) => {
                 setQuery(e.target.value);
                 setShowDropdown(true);
+                setErrors(prev => ({ ...prev, destination: "" }));
               }}
               onFocus={() => setShowDropdown(true)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
+              onInvalid={(e) => {
+                e.preventDefault();
+                setErrors(prev => ({ ...prev, destination: "¡Ey! El viaje debe tener un destino." }));
+              }}
+              className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all ${
+                errors.destination ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-brand'
+              }`}
               required
             />
           </div>
+          {errors.destination && (
+            <p className="text-red-500 text-xs font-semibold mt-1.5 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+              <AlertCircle className="w-3.5 h-3.5" /> {errors.destination}
+            </p>
+          )}
           
           {/* Autocomplete Dropdown */}
           {showDropdown && (results.length > 0 || loading) && (
@@ -183,9 +196,21 @@ export function NewTripForm() {
               step="0.01"
               min="1"
               placeholder="0.00"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
+              onChange={() => setErrors(prev => ({ ...prev, budgetLimit: "" }))}
+              onInvalid={(e) => {
+                e.preventDefault();
+                setErrors(prev => ({ ...prev, budgetLimit: "Define un presupuesto válido mayor a 0." }));
+              }}
+              className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all ${
+                errors.budgetLimit ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-brand'
+              }`}
               required
             />
+            {errors.budgetLimit && (
+              <p className="text-red-500 text-xs font-semibold mt-1.5 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+                <AlertCircle className="w-3.5 h-3.5" /> {errors.budgetLimit}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Moneda</label>

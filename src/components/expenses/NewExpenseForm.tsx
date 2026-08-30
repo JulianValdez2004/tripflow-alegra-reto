@@ -45,6 +45,7 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   // Estados para validación de sobregiro
   const [showOverdraftModal, setShowOverdraftModal] = useState(false);
@@ -263,9 +264,21 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
               type="text" 
               name="title"
               placeholder="Ej. Cena en restaurante"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all text-gray-700 h-12"
+              onChange={() => setErrors(prev => ({ ...prev, title: "" }))}
+              onInvalid={(e) => {
+                e.preventDefault();
+                setErrors(prev => ({ ...prev, title: "Describe brevemente en qué gastaste el dinero." }));
+              }}
+              className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all text-gray-700 h-12 ${
+                errors.title ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-brand'
+              }`}
               required
             />
+            {errors.title && (
+              <p className="text-red-500 text-xs font-semibold mt-1.5 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+                <AlertCircle className="w-3.5 h-3.5" /> {errors.title}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Categoría</label>
@@ -311,10 +324,22 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
                 step="0.01"
                 min="0.01"
                 placeholder="0.00"
-                className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all text-gray-700 text-lg font-medium h-14"
+                onChange={() => setErrors(prev => ({ ...prev, amount: "" }))}
+                onInvalid={(e) => {
+                  e.preventDefault();
+                  setErrors(prev => ({ ...prev, amount: "Ingresa un monto válido mayor a 0." }));
+                }}
+                className={`w-full pl-9 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all text-gray-700 text-lg font-medium h-14 ${
+                  errors.amount ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-brand'
+                }`}
                 required
               />
             </div>
+            {errors.amount && (
+              <p className="text-red-500 text-xs font-semibold mt-1.5 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+                <AlertCircle className="w-3.5 h-3.5" /> {errors.amount}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha del Gasto</label>
