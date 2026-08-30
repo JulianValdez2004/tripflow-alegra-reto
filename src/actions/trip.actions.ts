@@ -31,9 +31,9 @@ export async function createTrip(formData: FormData) {
     throw new Error('Error al guardar el viaje en la base de datos');
   }
 
-  // Refrescamos la caché del dashboard para que muestre el nuevo viaje
+  // Refrescamos la caché
   revalidatePath('/dashboard');
+  revalidatePath('/trips');
   
-  // Redirigimos al dashboard
-  redirect('/dashboard');
+  return { success: true };
 }

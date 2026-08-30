@@ -65,7 +65,7 @@ export async function createExpense(formData: FormData) {
 
   // Refrescamos la caché del dashboard para actualizar gráficos y listas
   revalidatePath('/dashboard');
+  revalidatePath('/expenses');
   
-  // Redirigimos al dashboard
-  redirect('/dashboard');
+  return { success: true };
 }

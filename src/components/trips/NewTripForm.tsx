@@ -7,9 +7,13 @@ import { createTrip } from "@/actions/trip.actions";
 import { DateRange } from "react-day-picker";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function NewTripForm() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
+  const [selectedDestination, setSelectedDestination] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -17,7 +21,6 @@ export function NewTripForm() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -42,6 +45,11 @@ export function NewTripForm() {
       return;
     }
     
+    // Si el texto actual coincide con el destino seleccionado, no volvemos a buscar
+    if (query === selectedDestination) {
+      return;
+    }
+    
     const timeoutId = setTimeout(async () => {
       setLoading(true);
       try {
@@ -56,33 +64,45 @@ export function NewTripForm() {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [query]);
+  }, [query, selectedDestination]);
 
   const handleSelectPlace = (placeName: string) => {
     setQuery(placeName);
+    setSelectedDestination(placeName);
     setShowDropdown(false);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setErrorMsg("");
+    
+    if (!selectedDestination || query !== selectedDestination) {
+      toast.error("Destino inválido", { description: "Debes seleccionar un destino de la lista desplegable." });
+      setIsSubmitting(false);
+      return;
+    }
     
     if (!dateRange?.from || !dateRange?.to) {
-      setErrorMsg("Por favor selecciona las fechas de inicio y fin del viaje.");
+      toast.error("Faltan fechas", { description: "Por favor selecciona las fechas de inicio y fin del viaje." });
       setIsSubmitting(false);
       return;
     }
 
     const formData = new FormData(e.currentTarget);
-    formData.set("destination", query);
+    formData.set("destination", selectedDestination);
     formData.set("startDate", format(dateRange.from, 'yyyy-MM-dd'));
     formData.set("endDate", format(dateRange.to, 'yyyy-MM-dd'));
     
+    const loadingToast = toast.loading("Creando viaje...");
+
     try {
       await createTrip(formData);
+      toast.dismiss(loadingToast);
+      toast.success("¡Viaje creado!", { description: "Tu viaje se ha registrado correctamente." });
+      router.push('/trips');
     } catch (err: any) {
-      setErrorMsg(err.message || "Ocurrió un error al guardar.");
+      toast.dismiss(loadingToast);
+      toast.error("Error al crear el viaje", { description: err.message || "Ocurrió un error al guardar." });
       setIsSubmitting(false);
     }
   };
@@ -175,9 +195,7 @@ export function NewTripForm() {
           </div>
         </div>
 
-        {errorMsg && (
-          <div className="text-red-500 text-sm font-medium">{errorMsg}</div>
-        )}
+
 
         {/* Botón Guardar */}
         <div className="flex justify-end mt-4">

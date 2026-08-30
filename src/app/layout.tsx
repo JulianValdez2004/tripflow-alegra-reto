@@ -5,6 +5,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/sonner";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -34,6 +35,9 @@ export default function RootLayout({
 
         {/* Mobile Bottom Nav (oculto en desktop) */}
         <BottomNav />
+
+        {/* Global Toaster for notifications */}
+        <Toaster />
       </body>
     </html>
   );

@@ -19,6 +19,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface Trip {
   id: string;
@@ -40,8 +42,8 @@ const CATEGORIES = [
 ];
 
 export function NewExpenseForm({ trips }: { trips: Trip[] }) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
   
   // Estado para el viaje seleccionado
   const [selectedTripId, setSelectedTripId] = useState<string>("");
@@ -88,10 +90,9 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      setErrorMsg("Por favor, selecciona solo imágenes (JPG, PNG).");
+      toast.error("Archivo inválido", { description: "Por favor, selecciona solo imágenes (JPG, PNG)." });
       return;
     }
-    setErrorMsg("");
     setSelectedFile(file);
     const reader = new FileReader();
     reader.onload = (e) => setPreviewUrl(e.target?.result as string);
@@ -107,7 +108,6 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setErrorMsg("");
     
     const formData = new FormData(e.currentTarget);
     
@@ -124,15 +124,21 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
     }
     
     if (!selectedTripId) {
-      setErrorMsg("Debes seleccionar un viaje.");
+      toast.error("Faltan datos", { description: "Debes seleccionar un viaje para registrar el gasto." });
       setIsSubmitting(false);
       return;
     }
 
+    const loadingToast = toast.loading("Registrando gasto...");
+
     try {
       await createExpense(formData);
+      toast.dismiss(loadingToast);
+      toast.success("¡Gasto registrado!", { description: "El gasto se sumó correctamente al viaje." });
+      router.push('/dashboard');
     } catch (err: any) {
-      setErrorMsg(err.message || "Ocurrió un error al guardar el gasto.");
+      toast.dismiss(loadingToast);
+      toast.error("Error al registrar", { description: err.message || "Ocurrió un error al guardar el gasto." });
       setIsSubmitting(false);
     }
   };
@@ -339,9 +345,7 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
           </div>
         </div>
 
-        {errorMsg && (
-          <div className="text-red-500 text-sm font-medium">{errorMsg}</div>
-        )}
+
 
         {/* Botón Guardar */}
         <div className="flex justify-end mt-4">
