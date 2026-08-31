@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MoreHorizontal, Edit2, Trash2, AlertTriangle, Loader2, X } from "lucide-react";
+import { MoreHorizontal, Edit2, Trash2, AlertTriangle, Loader2, X, Camera, Image as ImageIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { deleteExpense, updateExpense } from "@/actions/expense.actions";
 import { toast } from "sonner";
@@ -214,38 +214,51 @@ export function ExpenseActions({ expense, isFinished, onClose }: { expense: any,
               {/* Recibo */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Actualizar Recibo (Opcional)</label>
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  capture="environment"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return setReceiptFile(null);
-                    
-                    const image = new Image();
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                      image.src = ev.target?.result as string;
-                      image.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_SIZE = 800;
-                        let { width, height } = image;
-                        if (width > height && width > MAX_SIZE) {
-                          height *= MAX_SIZE / width; width = MAX_SIZE;
-                        } else if (height > MAX_SIZE) {
-                          width *= MAX_SIZE / height; height = MAX_SIZE;
-                        }
-                        canvas.width = width; canvas.height = height;
-                        canvas.getContext('2d')?.drawImage(image, 0, 0, width, height);
-                        canvas.toBlob((blob) => {
-                          if (blob) setReceiptFile(new File([blob], file.name, { type: 'image/jpeg' }));
-                        }, 'image/jpeg', 0.7);
+                <div className="flex gap-2">
+                  <input
+                    id={`gallery-input-${expense.id}`}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return setReceiptFile(null);
+                      
+                      const image = new Image();
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        image.src = ev.target?.result as string;
+                        image.onload = () => {
+                          const canvas = document.createElement('canvas');
+                          const MAX_SIZE = 800;
+                          let { width, height } = image;
+                          if (width > height && width > MAX_SIZE) {
+                            height *= MAX_SIZE / width; width = MAX_SIZE;
+                          } else if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height; height = MAX_SIZE;
+                          }
+                          canvas.width = width; canvas.height = height;
+                          canvas.getContext('2d')?.drawImage(image, 0, 0, width, height);
+                          canvas.toBlob((blob) => {
+                            if (blob) setReceiptFile(new File([blob], file.name, { type: 'image/jpeg' }));
+                          }, 'image/jpeg', 0.7);
+                        };
                       };
-                    };
-                    reader.readAsDataURL(file);
-                  }}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 transition-all cursor-pointer"
-                />
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  
+                  <button 
+                    type="button" 
+                    onClick={(e) => { e.stopPropagation(); document.getElementById(`gallery-input-${expense.id}`)?.click(); }}
+                    className="w-full py-4 px-4 bg-brand/10 text-brand rounded-xl font-bold hover:bg-brand/20 transition-colors flex items-center justify-center gap-2"
+                  >
+                    Escoge Tu Foto
+                  </button>
+                </div>
+                {receiptFile && (
+                  <p className="text-sm font-medium text-brand mt-2">NUEVO: {receiptFile.name}</p>
+                )}
                 {expense.receipt_url && !receiptFile && (
                   <p className="text-xs text-gray-400 mt-2">Ya tienes un recibo adjunto. Sube uno nuevo solo si deseas reemplazarlo.</p>
                 )}

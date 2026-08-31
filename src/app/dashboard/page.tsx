@@ -172,7 +172,7 @@ export default async function DashboardPage() {
                 </span>
               </div>
               
-              <p className="text-xl font-bold text-gray-900 line-clamp-1">{formatDestination(activeTrip.destination)}</p>
+              <p className="text-xl font-bold text-gray-900 leading-tight">{formatDestination(activeTrip.destination)}</p>
               <p className="text-sm text-gray-500 mt-1">{formatDate(activeTrip.start_date)} - {formatDate(activeTrip.end_date)}</p>
             </div>
           </div>

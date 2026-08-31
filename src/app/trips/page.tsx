@@ -129,7 +129,7 @@ export default async function TripsPage(props: { searchParams: Promise<{ filter?
                       <MapPin className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg text-gray-900 line-clamp-2 leading-tight">{formatDestination(trip.destination)}</h3>
+                      <h3 className="font-bold text-lg text-gray-900 leading-tight">{formatDestination(trip.destination)}</h3>
                       <div className="mt-2.5">
                         <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider shadow-sm ${statusColor}`}>
                           {statusText}

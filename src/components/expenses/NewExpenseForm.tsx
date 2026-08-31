@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { 
-  Loader2, UploadCloud, Receipt, X, AlertCircle,
+  Loader2, UploadCloud, Receipt, X, AlertCircle, Camera, Image as ImageIcon,
   Utensils, Bus, Bed, Ticket, Plane, MoreHorizontal, Calendar as CalendarIcon, Wallet, Search
 } from "lucide-react";
 import { createExpense } from "@/actions/expense.actions";
@@ -437,7 +437,6 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
               ref={fileInputRef}
               type="file" 
               accept="image/*"
-              capture="environment"
               className="hidden"
               onChange={handleChange}
             />
@@ -455,12 +454,20 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
                 <span className="text-sm font-medium text-gray-700 truncate max-w-[80%]">{selectedFile?.name}</span>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center p-6 text-center cursor-pointer">
+              <div className="flex flex-col items-center justify-center p-6 text-center w-full cursor-pointer">
                 <div className="p-3 bg-white rounded-full shadow-sm mb-3 text-brand">
-                  <UploadCloud className="w-6 h-6" />
+                  <Camera className="w-8 h-8" />
                 </div>
-                <p className="text-sm font-medium text-gray-700 mb-1">Haz clic para tomar/elegir una foto</p>
-                <p className="text-xs text-gray-500">O arrastra el recibo aquí (JPG, PNG)</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">Adjunta tu recibo</p>
+                <div className="w-full mt-2">
+                  <button 
+                    type="button" 
+                    onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                    className="w-full py-4 px-4 bg-brand/10 text-brand rounded-xl font-bold hover:bg-brand/20 transition-colors flex items-center justify-center gap-2"
+                  >
+                    Escoge Tu Foto
+                  </button>
+                </div>
               </div>
             )}
           </div>
