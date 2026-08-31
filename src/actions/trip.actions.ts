@@ -13,7 +13,7 @@ export async function createTrip(formData: FormData) {
 
   // Validación básica
   if (!destination || !startDate || !endDate || budgetLimit <= 0) {
-    throw new Error('Datos inválidos. Por favor revisa los campos.');
+    return { error: 'Datos inválidos. Por favor revisa los campos.' };
   }
 
   // Verificar cruce de fechas
@@ -22,7 +22,7 @@ export async function createTrip(formData: FormData) {
     .select('start_date, end_date, destination');
 
   if (fetchError) {
-    throw new Error('Error al validar fechas con los viajes existentes.');
+    return { error: 'Error al validar fechas con los viajes existentes.' };
   }
 
   const newStart = new Date(startDate);
@@ -42,8 +42,7 @@ export async function createTrip(formData: FormData) {
     const startStr = formatDate(overlappingTrip.start_date);
     const endStr = formatDate(overlappingTrip.end_date);
     
-    // throw new Error se enviará al Client Component y será atrapado en el catch() para mostrar en el Toast
-    throw new Error(`Las fechas se cruzan con tu viaje a ${formattedDest} (${startStr} al ${endStr}). ¡Intenta con otras fechas!`);
+    return { error: `Las fechas se cruzan con tu viaje a ${formattedDest} (${startStr} al ${endStr}). ¡Intenta con otras fechas!` };
   }
 
   const { error } = await supabase
@@ -58,7 +57,7 @@ export async function createTrip(formData: FormData) {
 
   if (error) {
     console.error('Error al crear el viaje:', error);
-    throw new Error('Error al guardar el viaje en la base de datos');
+    return { error: 'Error al guardar el viaje en la base de datos' };
   }
 
   // Refrescamos la caché
@@ -76,7 +75,7 @@ export async function deleteTrip(tripId: string) {
 
   if (error) {
     console.error('Error al eliminar el viaje:', error);
-    throw new Error('No se pudo eliminar el viaje.');
+    return { error: 'No se pudo eliminar el viaje.' };
   }
 
   revalidatePath('/dashboard');
@@ -93,7 +92,7 @@ export async function updateTrip(tripId: string, formData: FormData) {
   const currency = formData.get('currency') as string;
   
   if (budgetLimit <= 0) {
-    throw new Error('El presupuesto debe ser mayor a cero.');
+    return { error: 'El presupuesto debe ser mayor a cero.' };
   }
 
   const updates: any = { budget_limit: budgetLimit };
@@ -106,7 +105,7 @@ export async function updateTrip(tripId: string, formData: FormData) {
       .select('id, start_date, end_date, destination')
       .neq('id', tripId); // Excluir este viaje
 
-    if (fetchError) throw new Error('Error al validar fechas.');
+    if (fetchError) return { error: 'Error al validar fechas.' };
 
     const newStart = new Date(startDate);
     const newEnd = new Date(endDate);
@@ -121,7 +120,7 @@ export async function updateTrip(tripId: string, formData: FormData) {
       const formattedDest = formatDestination(overlappingTrip.destination);
       const startStr = formatDate(overlappingTrip.start_date);
       const endStr = formatDate(overlappingTrip.end_date);
-      throw new Error(`Las fechas se cruzan con tu viaje a ${formattedDest} (${startStr} al ${endStr}).`);
+      return { error: `Las fechas se cruzan con tu viaje a ${formattedDest} (${startStr} al ${endStr}).` };
     }
 
     updates.destination = destination;
@@ -137,7 +136,7 @@ export async function updateTrip(tripId: string, formData: FormData) {
 
   if (error) {
     console.error('Error al actualizar el viaje:', error);
-    throw new Error('Error al actualizar el viaje en la base de datos');
+    return { error: 'Error al actualizar el viaje en la base de datos' };
   }
 
   revalidatePath('/dashboard');

@@ -13,7 +13,7 @@ export async function createExpense(formData: FormData) {
 
   // Validación básica
   if (!tripId || !title || amount <= 0 || !category) {
-    throw new Error('Faltan datos obligatorios para el gasto.');
+    return { error: 'Faltan datos obligatorios para el gasto.' };
   }
 
   let receiptUrl = null;
@@ -31,7 +31,7 @@ export async function createExpense(formData: FormData) {
     if (uploadError) {
       console.error('Error subiendo recibo:', uploadError);
       // Podríamos fallar o continuar sin recibo, por ahora fallamos para asegurar la integridad
-      throw new Error('Error al subir la imagen del recibo.');
+      return { error: 'Error al subir la imagen del recibo.' };
     } else {
       // Obtener la URL pública
       const { data } = supabase.storage.from('receipts').getPublicUrl(`public/${fileName}`);
@@ -78,7 +78,7 @@ export async function deleteExpense(expenseId: string) {
 
   if (error) {
     console.error('Error al eliminar el gasto:', error);
-    throw new Error('No se pudo eliminar el gasto.');
+    return { error: 'No se pudo eliminar el gasto.' };
   }
 
   revalidatePath('/dashboard');
@@ -94,7 +94,7 @@ export async function updateExpense(expenseId: string, formData: FormData) {
   const receiptFile = formData.get('receipt') as File | null;
 
   if (!title || amount <= 0 || !category) {
-    throw new Error('Faltan datos obligatorios o el monto es inválido.');
+    return { error: 'Faltan datos obligatorios o el monto es inválido.' };
   }
 
   const updates: any = {
@@ -116,7 +116,7 @@ export async function updateExpense(expenseId: string, formData: FormData) {
       .upload(`public/${fileName}`, receiptFile);
 
     if (uploadError) {
-      throw new Error('Error al subir el nuevo recibo.');
+      return { error: 'Error al subir el nuevo recibo.' };
     } else {
       const { data } = supabase.storage.from('receipts').getPublicUrl(`public/${fileName}`);
       updates.receipt_url = data.publicUrl;
@@ -130,7 +130,7 @@ export async function updateExpense(expenseId: string, formData: FormData) {
 
   if (error) {
     console.error('Error al actualizar el gasto:', error);
-    throw new Error('Error al actualizar el gasto en la base de datos');
+    return { error: 'Error al actualizar el gasto en la base de datos' };
   }
 
   revalidatePath('/dashboard');

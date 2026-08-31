@@ -78,7 +78,7 @@ export function CurrencyInput({ value, onChange, currencySymbol = "$", error, cl
         value={displayValue}
         onChange={handleInputChange}
         className="flex-1 w-full bg-transparent py-3 pr-12 outline-none text-gray-700 text-lg font-medium"
-        {...{...props, name: undefined, className: undefined}}
+        {...( (() => { const { name, ...rest } = props; return rest; })() )}
       />
       <div className="absolute right-0 top-0 bottom-0 flex flex-col items-center justify-center w-10 border-l border-gray-100 bg-gray-50/50">
         <button

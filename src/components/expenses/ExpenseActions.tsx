@@ -31,7 +31,10 @@ export function ExpenseActions({ expense, isFinished, onClose }: { expense: any,
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await deleteExpense(expense.id);
+      const res = await deleteExpense(expense.id);
+      if (res?.error) {
+        throw new Error(res.error);
+      }
       toast.success("Gasto eliminado");
       setShowDeleteModal(false);
       onClose(); // Close the parent receipt modal
@@ -57,7 +60,10 @@ export function ExpenseActions({ expense, isFinished, onClose }: { expense: any,
     }
 
     try {
-      await updateExpense(expense.id, formData);
+      const res = await updateExpense(expense.id, formData);
+      if (res?.error) {
+        throw new Error(res.error);
+      }
       toast.success("Gasto actualizado correctamente");
       setShowEditModal(false);
       onClose(); // Close parent to refresh data
@@ -176,7 +182,11 @@ export function ExpenseActions({ expense, isFinished, onClose }: { expense: any,
                   <input 
                     type="date" 
                     value={dateStr}
-                    max={expense.trips?.end_date} // Validation rules
+                    max={
+                      expense.trips?.end_date && expense.trips.end_date < new Date().toISOString().split('T')[0]
+                        ? expense.trips.end_date 
+                        : new Date().toISOString().split('T')[0]
+                    }
                     onChange={(e) => setDateStr(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
                     required
@@ -208,7 +218,32 @@ export function ExpenseActions({ expense, isFinished, onClose }: { expense: any,
                   type="file" 
                   accept="image/*"
                   capture="environment"
-                  onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return setReceiptFile(null);
+                    
+                    const image = new Image();
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      image.src = ev.target?.result as string;
+                      image.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 800;
+                        let { width, height } = image;
+                        if (width > height && width > MAX_SIZE) {
+                          height *= MAX_SIZE / width; width = MAX_SIZE;
+                        } else if (height > MAX_SIZE) {
+                          width *= MAX_SIZE / height; height = MAX_SIZE;
+                        }
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d')?.drawImage(image, 0, 0, width, height);
+                        canvas.toBlob((blob) => {
+                          if (blob) setReceiptFile(new File([blob], file.name, { type: 'image/jpeg' }));
+                        }, 'image/jpeg', 0.7);
+                      };
+                    };
+                    reader.readAsDataURL(file);
+                  }}
                   className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 transition-all cursor-pointer"
                 />
                 {expense.receipt_url && !receiptFile && (

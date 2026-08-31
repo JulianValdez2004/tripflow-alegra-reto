@@ -109,7 +109,10 @@ export function NewTripForm() {
     const loadingToast = toast.loading("Creando viaje...");
 
     try {
-      await createTrip(formData);
+      const res = await createTrip(formData);
+      if (res?.error) {
+        throw new Error(res.error);
+      }
       toast.dismiss(loadingToast);
       toast.success("¡Viaje creado!", { description: "Tu viaje se ha registrado correctamente." });
       router.push('/trips');

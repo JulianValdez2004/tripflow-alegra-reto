@@ -31,7 +31,7 @@ interface Trip {
   start_date: string;
   end_date: string;
   expenses: { amount: number }[];
-  status: string;
+  status?: string;
 }
 
 const CATEGORIES = [
@@ -101,15 +101,55 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
     }
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       setErrorMsg("Por favor, selecciona solo imágenes (JPG, PNG).");
       return;
     }
     setErrorMsg("");
-    setSelectedFile(file);
+    
+    // Comprimir imagen usando Canvas para evitar límite de 4.5MB en Vercel
+    const image = new Image();
     const reader = new FileReader();
-    reader.onload = (e) => setPreviewUrl(e.target?.result as string);
+    
+    reader.onload = (e) => {
+      image.src = e.target?.result as string;
+      image.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = image.width;
+        let height = image.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(image, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            setSelectedFile(compressedFile);
+            setPreviewUrl(URL.createObjectURL(compressedFile));
+          }
+        }, 'image/jpeg', 0.7); // 70% calidad
+      };
+    };
     reader.readAsDataURL(file);
   };
 
@@ -164,13 +204,18 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
 
   const executeSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
+    const loadingToast = toast.loading("Guardando gasto...");
     try {
-      await createExpense(formData);
-      toast.success("¡Gasto registrado!", { description: "Se ha descontado de tu presupuesto." });
+      const res = await createExpense(formData);
+      if (res?.error) {
+        throw new Error(res.error);
+      }
+      toast.dismiss(loadingToast);
+      toast.success("¡Gasto registrado!", { description: "El gasto se ha guardado correctamente." });
       router.push('/dashboard');
     } catch (err: any) {
-      toast.error("Error", { description: err.message || "Ocurrió un error al guardar el gasto." });
-      setErrorMsg(err.message || "Ocurrió un error al guardar el gasto.");
+      toast.dismiss(loadingToast);
+      toast.error("Error al registrar el gasto", { description: err.message || "Ocurrió un error al guardar." });
       setIsSubmitting(false);
     }
   };
@@ -363,11 +408,10 @@ export function NewExpenseForm({ trips }: { trips: Trip[] }) {
                   mode="single"
                   selected={expenseDate}
                   onSelect={setExpenseDate}
-                  disabled={
-                    selectedTrip 
-                      ? { after: new Date(new Date(selectedTrip.end_date).setMinutes(new Date(selectedTrip.end_date).getMinutes() + new Date(selectedTrip.end_date).getTimezoneOffset())) }
-                      : false
-                  }
+                  disabled={[
+                    { after: new Date() }, // No permitir seleccionar fechas en el futuro
+                    selectedTrip ? { after: new Date(new Date(selectedTrip.end_date).setMinutes(new Date(selectedTrip.end_date).getMinutes() + new Date(selectedTrip.end_date).getTimezoneOffset())) } : false
+                  ].filter(Boolean) as any}
                   locale={es}
                 />
               </PopoverContent>

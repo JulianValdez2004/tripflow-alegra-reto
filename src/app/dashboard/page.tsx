@@ -72,14 +72,19 @@ export default async function DashboardPage() {
 
   // Agrupar gastos por día para la gráfica
   const groupedExpenses = activeTrip.expenses.reduce((acc: any, exp: any) => {
-    const date = new Date(exp.created_at);
-    const dateKey = date.toISOString().split('T')[0];
+    // Tomamos la fecha cruda YYYY-MM-DD directamente de la base de datos para ignorar zonas horarias
+    const dateStr = exp.created_at.substring(0, 10);
+    const dateKey = dateStr;
     
     if (!acc[dateKey]) {
+      // Creamos una fecha local a la medianoche para evitar desfases al formatear en el servidor
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const localDate = new Date(y, m - 1, d);
+      
       acc[dateKey] = {
-        date,
-        dayLabel: capitalize(new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date)),
-        fullDate: capitalize(new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).format(date)),
+        date: localDate, // guardamos para el sort
+        dayLabel: capitalize(new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(localDate)),
+        fullDate: capitalize(new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).format(localDate)),
         amount: 0
       };
     }
@@ -90,6 +95,7 @@ export default async function DashboardPage() {
   const expensesChartData = Object.values(groupedExpenses)
     .sort((a: any, b: any) => a.date.getTime() - b.date.getTime())
     .map((item: any) => ({
+      rawDate: item.date.toISOString(),
       dayLabel: item.dayLabel,
       fullDate: item.fullDate,
       amount: item.amount
@@ -98,7 +104,7 @@ export default async function DashboardPage() {
   if (expensesChartData.length === 0) {
     const todayLabel = capitalize(new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(today));
     const todayFull = capitalize(new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).format(today));
-    expensesChartData.push({ dayLabel: todayLabel, fullDate: todayFull, amount: 0 }); 
+    expensesChartData.push({ rawDate: today.toISOString(), dayLabel: todayLabel, fullDate: todayFull, amount: 0 }); 
   }
 
   const recentExpenses = [...activeTrip.expenses]
@@ -149,19 +155,6 @@ export default async function DashboardPage() {
         
         {/* Columna Izquierda: Gráfica */}
         <div className="lg:col-span-2 bg-white border border-gray-100 p-6 rounded-2xl shadow-sm flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900 hidden md:block">Gastos Actuales</h2>
-            <h2 className="text-xl font-bold text-gray-900 block md:hidden">Evolución de Gastos</h2>
-            <Select defaultValue="mes">
-              <SelectTrigger className="w-[140px] h-8 text-xs font-semibold bg-white border-gray-200 rounded-lg focus:ring-brand/30 focus:border-brand transition-colors text-gray-700 shadow-sm">
-                <SelectValue placeholder="Periodo" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl shadow-xl border-gray-100">
-                <SelectItem value="mes" className="cursor-pointer text-sm font-medium focus:bg-brand/10 focus:text-brand transition-colors">Este Mes</SelectItem>
-                <SelectItem value="semana" className="cursor-pointer text-sm font-medium focus:bg-brand/10 focus:text-brand transition-colors">Última Semana</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <DashboardChart data={expensesChartData} currency={activeTrip.currency} />
         </div>
 

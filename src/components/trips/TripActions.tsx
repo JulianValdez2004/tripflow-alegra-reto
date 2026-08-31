@@ -88,7 +88,10 @@ export function TripActions({ trip, status }: { trip: any, status: string }) {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await deleteTrip(trip.id);
+      const res = await deleteTrip(trip.id);
+      if (res?.error) {
+        throw new Error(res.error);
+      }
       toast.success("Viaje eliminado", { description: "El viaje y sus gastos han sido borrados." });
       setShowDeleteModal(false);
     } catch (error: any) {
@@ -118,7 +121,10 @@ export function TripActions({ trip, status }: { trip: any, status: string }) {
     }
 
     try {
-      await updateTrip(trip.id, formData);
+      const res = await updateTrip(trip.id, formData);
+      if (res?.error) {
+        throw new Error(res.error);
+      }
       toast.success("Viaje actualizado", { description: "Los cambios se guardaron correctamente." });
       setShowEditModal(false);
     } catch (error: any) {
